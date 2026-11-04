@@ -26,8 +26,7 @@
 
 1. Cloudflare 대시보드(미디어브레인 계정) → Workers & Pages → Create → Import a repository → 이 리포 선택
 2. 빌드 설정: Deploy command `npx wrangler deploy` (기본값). 첫 배포 때 D1 `samyang-poll-db`가 자동으로 만들어집니다.
-3. 첫 배포 뒤 한 번만: Settings → Variables and Secrets 에서 `ADMIN_TOKEN`(32자 이상) 을 Secret으로 추가하고, Build 설정의 Deploy command를 `npx wrangler d1 migrations apply samyang-poll-db --remote && npx wrangler deploy` 로 바꿔 재배포합니다.
-   (또는 로컬에서 `npm run db:remote` 한 번 실행)
+3. 첫 배포 뒤 한 번만: Worker의 Settings → Variables and Secrets 에서 `ADMIN_TOKEN`(32자 이상)을 Secret으로 추가합니다. 설문 표는 Worker가 첫 요청 때 스스로 만듭니다.
 
 ## 로컬 개발
 
