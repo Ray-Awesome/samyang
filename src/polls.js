@@ -9,6 +9,7 @@ export const POLLS = {
     title: '삼양인 한 표 · 1월 6일',
     type: 'choice',
     question: '2월부터 <삼양 사람들>이 가장 먼저 찾아갔으면 하는 곳은?',
+    commentPrompt: '그곳에 가면 꼭 물어봐 줬으면 하는 것 한 가지(선택)',
     closesAt: '2027-01-08T09:00:00Z',
     options: [
       { code: 'holdings', label: '삼양홀딩스' },
@@ -30,7 +31,9 @@ export const POLLS = {
     title: '삼양인 한 표 · 1월 13일',
     type: 'text',
     question: '3월 리더 인터뷰에서 꼭 묻고 싶은 질문은 무엇인가요?',
-    hint: '보내 주신 분의 이름은 싣지 않습니다. 인터뷰에 쓸 질문은 커뮤니케이션팀과 함께 고릅니다.',
+    hint: '인터뷰에 쓸 질문은 커뮤니케이션팀과 함께 고릅니다. 질문은 다음 주 레터에 공개합니다.',
+    anonymousNote: '이름 없이 보내도 돼요. 이름을 남기면 질문이 실릴 때 "누가 물었는지"도 함께 실려요.',
+    nominatePrompt: '2월 <삼양 사람들> 삼양바이오팜 편에서 이야기를 듣고 싶은 바이오팜 동료가 있나요?',
     placeholder: '예) 올해 우리 계열사에서 가장 먼저 바뀌는 것은 무엇인가요?',
     closesAt: '2027-01-15T09:00:00Z',
   },
@@ -40,6 +43,8 @@ export const POLLS = {
     title: '삼양인 한 표 · 1월 20일',
     type: 'choice',
     question: '점심시간, 주로 어떻게 보내세요?',
+    commentPrompt: '우리 사업장 점심의 한 장면을 한 줄로 알려 주세요(선택)',
+    nominatePrompt: '휴가 제도나 육아휴직을 먼저 써 본 동료를 추천해 주세요. 다음 트렌드 팔럽에서 그 동료의 이야기를 들어요.',
     closesAt: '2027-01-22T09:00:00Z',
     options: [
       { code: 'cafeteria', label: '구내식당에서' },

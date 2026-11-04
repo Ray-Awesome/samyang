@@ -10,6 +10,9 @@
 //   GET  /r/:issue              결과(객관식 집계, 주관식은 응답 수만)
 //   GET  /f/:issue              한 줄 피드백 입력 화면
 //   POST /f/:issue              피드백 기록
+//   GET  /n/:issue              동료 추천(릴레이) 입력 화면
+//   POST /n/:issue              동료 추천 기록
+// 응답·피드백·추천에는 이름·소속과 "레터에 실려도 좋다" 동의를 선택으로 받는다.
 // 관리자(Basic 인증, 사용자 이름 admin · 비밀번호 ADMIN_TOKEN)
 //   GET  /admin                 호별 응답 수
 //   GET  /admin/:issue          집계·주관식 답·피드백 전체
@@ -34,9 +37,30 @@ const SCHEMA = [
      body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')))`,
   `CREATE INDEX IF NOT EXISTS feedback_issue ON feedback(issue)`,
 ];
+// 이미 만들어진 표에 나중에 더한 칸(migrations/0002). 이미 있으면 넘어간다.
+const ALTERS = [
+  'ALTER TABLE responses ADD COLUMN comment TEXT',
+  'ALTER TABLE responses ADD COLUMN display_name TEXT',
+  'ALTER TABLE responses ADD COLUMN team TEXT',
+  'ALTER TABLE responses ADD COLUMN publish INTEGER NOT NULL DEFAULT 0',
+  "ALTER TABLE feedback ADD COLUMN kind TEXT NOT NULL DEFAULT 'feedback'",
+  'ALTER TABLE feedback ADD COLUMN display_name TEXT',
+  'ALTER TABLE feedback ADD COLUMN team TEXT',
+  'ALTER TABLE feedback ADD COLUMN publish INTEGER NOT NULL DEFAULT 0',
+];
 let schemaReady = null;
+async function migrate(env) {
+  await env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s)));
+  for (const sql of ALTERS) {
+    try {
+      await env.DB.prepare(sql).run();
+    } catch (e) {
+      if (!/duplicate column/i.test(String(e && e.message))) throw e;
+    }
+  }
+}
 function ensureSchema(env) {
-  schemaReady ??= env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s))).catch((e) => {
+  schemaReady ??= migrate(env).catch((e) => {
     schemaReady = null;
     throw e;
   });
@@ -65,16 +89,17 @@ async function route(request, env) {
 
   const [kind, issue, code] = parts;
   const poll = POLLS[issue];
-  if (!poll || !['v', 'q', 'r', 'f'].includes(kind)) return notFound();
+  if (!poll || !['v', 'q', 'r', 'f', 'n'].includes(kind)) return notFound();
 
   if (kind === 'r' && method === 'GET') return results(env, issue, poll);
 
   const vid = await voterId(request);
   const voter = await sha256(vid.value);
 
-  if (kind === 'f') {
-    if (method === 'GET') return withCookie(feedbackForm(issue, poll, vid.value), vid);
-    if (method === 'POST') return withCookie(await saveFeedback(request, env, issue, voter, vid.value), vid);
+  if (kind === 'f' || kind === 'n') {
+    const form = kind === 'f' ? feedbackForm : nominateForm;
+    if (method === 'GET' && !code) return withCookie(form(issue, poll, vid.value), vid);
+    if (method === 'POST' && !code) return withCookie(await saveFeedback(request, env, issue, voter, vid.value, kind), vid);
   }
 
   if (kind === 'v' && poll.type === 'choice') {
@@ -118,6 +143,14 @@ function sameVoter(form, vidValue) {
   return form.get('vid') === vidValue;
 }
 
+// 이름·소속·지면 공개 동의(모두 선택). 이름이나 소속이 하나라도 있어야 공개로 본다.
+function readIdentity(form) {
+  const name = String(form.get('name') || '').trim().slice(0, 30);
+  const team = String(form.get('team') || '').trim().slice(0, 40);
+  const publish = form.get('publish') === 'on' && Boolean(name || team) ? 1 : 0;
+  return { name: name || null, team: team || null, publish };
+}
+
 function isClosed(poll, now = new Date()) {
   return now >= new Date(poll.closesAt);
 }
@@ -139,10 +172,14 @@ async function saveResponse(request, env, issue, poll, voter, vidValue) {
     if (!answer) return textForm(issue, poll, vidValue, '한 줄이라도 적어 주세요.');
   }
 
+  const comment = poll.commentPrompt ? String(form.get('comment') || '').trim().slice(0, 150) || null : null;
+  const who = readIdentity(form);
   await env.DB.prepare(
-    `INSERT INTO responses (issue, voter, choice, answer) VALUES (?1, ?2, ?3, ?4)
-     ON CONFLICT(issue, voter) DO UPDATE SET choice = ?3, answer = ?4, updated_at = datetime('now')`,
-  ).bind(issue, voter, choice, answer).run();
+    `INSERT INTO responses (issue, voter, choice, answer, comment, display_name, team, publish)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+     ON CONFLICT(issue, voter) DO UPDATE SET choice = ?3, answer = ?4, comment = ?5, display_name = ?6, team = ?7,
+       publish = ?8, updated_at = datetime('now')`,
+  ).bind(issue, voter, choice, answer, comment, who.name, who.team, who.publish).run();
 
   const email = String(form.get('email') || '').trim().toLowerCase();
   const agreed = form.get('agree') === 'on';
@@ -166,22 +203,38 @@ async function saveResponse(request, env, issue, poll, voter, vidValue) {
     '응답이 기록됐습니다',
     `<p class="lead">${picked ? `<strong>${esc(picked)}</strong>을(를) 고르셨습니다.` : '보내 주신 답을 잘 받았습니다.'}</p>
      ${entryNote}
+     ${who.publish ? `<p class="note">${esc([who.name, who.team].filter(Boolean).join(' · '))} 님의 답이 다음 레터에 실릴 수 있어요.</p>` : ''}
      <p>결과는 ${esc(poll.resultIssueLabel)} 레터에 실립니다. 마감 전에는 다시 골라도 마지막 응답만 집계됩니다.</p>
      <p><a class="btn ghost" href="/r/${esc(issue)}">지금까지 결과 보기</a></p>`,
   );
 }
 
-async function saveFeedback(request, env, issue, voter, vidValue) {
+async function saveFeedback(request, env, issue, voter, vidValue, kind) {
   const form = await request.formData();
   if (!sameVoter(form, vidValue)) return page('다시 시도해 주세요', '<p>메일의 링크를 다시 눌러 주세요.</p>', 400);
-  const body = String(form.get('body') || '').trim().slice(0, MAX_FEEDBACK);
-  if (!body) return feedbackForm(issue, POLLS[issue], vidValue, '한 줄이라도 적어 주세요.');
+  const poll = POLLS[issue];
+  let body;
+  if (kind === 'n') {
+    const nominee = String(form.get('nominee') || '').trim().slice(0, 60);
+    const reason = String(form.get('reason') || '').trim().slice(0, MAX_FEEDBACK);
+    if (!nominee || !reason) return nominateForm(issue, poll, vidValue, '추천할 동료와 이유를 함께 적어 주세요.');
+    body = `${nominee} — ${reason}`;
+  } else {
+    body = String(form.get('body') || '').trim().slice(0, MAX_FEEDBACK);
+    if (!body) return feedbackForm(issue, poll, vidValue, '한 줄이라도 적어 주세요.');
+  }
   const recent = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM feedback WHERE issue = ?1 AND voter = ?2`,
-  ).bind(issue, voter).first();
-  if (recent.n >= 3) return page('고맙습니다', '<p>이번 호에는 이미 의견을 세 번 보내 주셨습니다.</p>');
-  await env.DB.prepare(`INSERT INTO feedback (issue, voter, body) VALUES (?1, ?2, ?3)`).bind(issue, voter, body).run();
-  return page('의견을 잘 받았습니다', '<p>다음 호 맨 아래 피드백 말풍선에 소개될 수 있습니다. 이름은 싣지 않습니다.</p>');
+    `SELECT COUNT(*) AS n FROM feedback WHERE issue = ?1 AND voter = ?2 AND kind = ?3`,
+  ).bind(issue, voter, kind === 'n' ? 'nominate' : 'feedback').first();
+  if (recent.n >= 3) return page('고맙습니다', '<p>이번 호에는 이미 세 번 보내 주셨어요.</p>');
+  const who = readIdentity(form);
+  await env.DB.prepare(
+    `INSERT INTO feedback (issue, voter, body, kind, display_name, team, publish) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+  ).bind(issue, voter, body, kind === 'n' ? 'nominate' : 'feedback', who.name, who.team, who.publish).run();
+  const shown = who.publish ? `${esc([who.name, who.team].filter(Boolean).join(' · '))} 님의 이름과 함께` : '이름 없이';
+  return kind === 'n'
+    ? page('추천을 잘 받았어요', `<p>편집팀이 추천받은 동료에게 먼저 연락드려요. 레터에 실리면 추천한 분도 ${shown} 소개돼요.</p>`)
+    : page('의견을 잘 받았어요', `<p>다음 호 맨 아래 피드백 말풍선에 ${shown} 실릴 수 있어요.</p>`);
 }
 
 // ── 화면 ──
@@ -198,6 +251,8 @@ function confirmChoice(issue, poll, code, vidValue) {
        <fieldset>
          ${poll.options.map((o) => `<label class="opt"><input type="radio" name="code" value="${esc(o.code)}"${o.code === code ? ' checked' : ''}> ${esc(o.label)}</label>`).join('')}
        </fieldset>
+       ${poll.commentPrompt ? `<label class="q2">${esc(poll.commentPrompt)}<textarea name="comment" maxlength="150" rows="2"></textarea></label>` : ''}
+       ${identityFields()}
        ${entryFields()}
        <button class="btn" type="submit">이 답으로 보내기</button>
      </form>`,
@@ -214,6 +269,7 @@ function textForm(issue, poll, vidValue, error = '') {
      <form method="post" action="/q/${esc(issue)}">
        <input type="hidden" name="vid" value="${esc(vidValue)}">
        <textarea name="answer" maxlength="${MAX_ANSWER}" rows="4" required placeholder="${esc(poll.placeholder || '')}"></textarea>
+       ${identityFields(poll.anonymousNote || '')}
        ${entryFields()}
        <button class="btn" type="submit">보내기</button>
      </form>`,
@@ -228,9 +284,35 @@ function feedbackForm(issue, poll, vidValue, error = '') {
      <form method="post" action="/f/${esc(issue)}">
        <input type="hidden" name="vid" value="${esc(vidValue)}">
        <textarea name="body" maxlength="${MAX_FEEDBACK}" rows="3" required></textarea>
+       ${identityFields()}
        <button class="btn" type="submit">보내기</button>
      </form>`,
   );
+}
+
+function nominateForm(issue, poll, vidValue, error = '') {
+  return page(
+    '이 동료를 추천합니다',
+    `<p class="q">${esc(poll.nominatePrompt || '레터에서 이야기를 듣고 싶은 동료가 있나요? 옆 팀, 다른 계열사, 다른 사업장 누구든 좋아요.')}</p>
+     ${error ? `<p class="err">${esc(error)}</p>` : ''}
+     <form method="post" action="/n/${esc(issue)}">
+       <input type="hidden" name="vid" value="${esc(vidValue)}">
+       <label>추천할 동료(이름·소속) <input type="text" name="nominee" maxlength="60" required placeholder="예) 삼양패키징 광혜원공장 ○○○ 대리"></label>
+       <label>추천하는 이유 한 줄 <textarea name="reason" maxlength="${MAX_FEEDBACK}" rows="3" required></textarea></label>
+       ${identityFields('추천한 분 이름은 동의하신 경우에만 함께 실려요.')}
+       <button class="btn" type="submit">추천하기</button>
+     </form>`,
+  );
+}
+
+function identityFields(anonymousNote = '') {
+  return `<fieldset class="who">
+    <legend>레터에 이름과 함께 실릴 수 있어요(선택)</legend>
+    ${anonymousNote ? `<p class="hint">${esc(anonymousNote)}</p>` : ''}
+    <label>이름 <input type="text" name="name" maxlength="30" autocomplete="name"></label>
+    <label>소속(계열사·팀·사업장) <input type="text" name="team" maxlength="40" placeholder="예) 삼양사 울산공장 생산팀"></label>
+    <label class="agree"><input type="checkbox" name="publish"> 제 답이 이름·소속과 함께 레터에 실려도 좋아요.</label>
+  </fieldset>`;
 }
 
 function entryFields() {
@@ -306,10 +388,10 @@ async function admin(request, env, parts, method) {
 
   if (csv && method === 'GET') {
     const { results: rows } = await env.DB.prepare(
-      `SELECT created_at, updated_at, choice, answer FROM responses WHERE issue = ?1 ORDER BY created_at`,
+      `SELECT created_at, updated_at, choice, answer, comment, display_name, team, publish FROM responses WHERE issue = ?1 ORDER BY created_at`,
     ).bind(issue).all();
-    const lines = ['created_at,updated_at,choice,answer', ...rows.map((r) =>
-      [r.created_at, r.updated_at, r.choice ?? '', r.answer ?? ''].map(csvCell).join(','))];
+    const lines = ['created_at,updated_at,choice,answer,comment,name,team,publish', ...rows.map((r) =>
+      [r.created_at, r.updated_at, r.choice ?? '', r.answer ?? '', r.comment ?? '', r.display_name ?? '', r.team ?? '', r.publish].map(csvCell).join(','))];
     return new Response('﻿' + lines.join('\r\n'), {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
@@ -349,10 +431,19 @@ async function admin(request, env, parts, method) {
       ).bind(issue).all();
       body += '<h2>주관식 답</h2><ol>' + rows.map((r) => `<li>${esc(r.answer)} <small>${esc(r.created_at)}</small></li>`).join('') + '</ol>';
     }
-    const { results: fb } = await env.DB.prepare(
-      `SELECT body, created_at FROM feedback WHERE issue = ?1 ORDER BY id DESC`,
+    const { results: pub } = await env.DB.prepare(
+      `SELECT choice, answer, comment, display_name, team FROM responses
+       WHERE issue = ?1 AND publish = 1 ORDER BY updated_at DESC`,
     ).bind(issue).all();
-    body += '<h2>피드백</h2><ol>' + fb.map((r) => `<li>${esc(r.body)} <small>${esc(r.created_at)}</small></li>`).join('') + '</ol>';
+    const lab = Object.fromEntries((poll.options || []).map((o) => [o.code, o.label]));
+    body += `<h2>레터에 실어도 좋다는 답 (${pub.length})</h2><ol>` + pub.map((r) =>
+      `<li><b>${esc([r.display_name, r.team].filter(Boolean).join(' · '))}</b> — ${esc(r.answer || lab[r.choice] || '')}${r.comment ? ` · "${esc(r.comment)}"` : ''}</li>`).join('') + '</ol>';
+    const { results: fb } = await env.DB.prepare(
+      `SELECT kind, body, display_name, team, publish, created_at FROM feedback WHERE issue = ?1 ORDER BY id DESC`,
+    ).bind(issue).all();
+    const line = (r) => `<li>${esc(r.body)} <small>${r.publish ? esc([r.display_name, r.team].filter(Boolean).join(' · ')) + ' · 실명 동의' : '익명'} · ${esc(r.created_at)}</small></li>`;
+    body += '<h2>동료 추천</h2><ol>' + fb.filter((r) => r.kind === 'nominate').map(line).join('') + '</ol>';
+    body += '<h2>피드백</h2><ol>' + fb.filter((r) => r.kind !== 'nominate').map(line).join('') + '</ol>';
     body += `<form method="post" action="/admin/${esc(issue)}/draw"><label>추첨 인원 <input type="number" name="n" value="5" min="1" max="50"></label> <button class="btn" type="submit">추첨</button></form>
       <form method="post" action="/admin/${esc(issue)}/purge" onsubmit="return confirm('이 호의 응모 메일 주소를 모두 지웁니다.')"><button class="btn ghost" type="submit">응모 주소 지우기(발송 후)</button></form>`;
     return page(`관리 · ${poll.issueLabel}`, body, 200, true);
@@ -422,7 +513,9 @@ main{max-width:560px;margin:0 auto;padding:32px 16px}
 .q{font-weight:600}.hint,.note,small{color:var(--sub);font-size:14px}.err{color:#c62828}
 fieldset{border:0;padding:0;margin:16px 0}.opt{display:block;padding:12px;border:1px solid var(--line);border-radius:8px;margin:8px 0;cursor:pointer}
 textarea,input[type=email],input[type=number]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
-input[type=number]{width:90px}.entry{margin:16px 0;font-size:15px}.entry label{display:block;margin:8px 0}
+input[type=number]{width:90px}.entry{margin:16px 0;font-size:15px}.entry label,.who label,.q2{display:block;margin:8px 0}
+.who{border:1px solid var(--line);border-radius:8px;padding:12px;margin:16px 0}.who legend{font-weight:600;padding:0 4px}
+input[type=text]{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 .btn{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:12px 18px;font:inherit;font-weight:600;text-decoration:none;cursor:pointer;margin-top:8px}
 .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 .bars{list-style:none;padding:0}.bars li{display:grid;grid-template-columns:1fr 2fr 48px;gap:8px;align-items:center;margin:8px 0}
