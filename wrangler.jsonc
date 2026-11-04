@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "samyang-poll",
+  // 미디어브레인 Cloudflare 계정. 다른 계정으로 잘못 배포하지 않도록 고정한다.
+  "account_id": "b50df4bb0b0ca01535bf20b2dc621489",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "samyang-poll-db",
+      // database_id를 비워 두면 첫 배포 때 Wrangler가 데이터베이스를 만들고 연결한다.
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": { "enabled": true }
+}

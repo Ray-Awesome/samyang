@@ -1,0 +1,15 @@
+{
+  "name": "samyang",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply samyang-poll-db --local",
+    "db:remote": "wrangler d1 migrations apply samyang-poll-db --remote",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "4.157.0"
+  }
+}
