@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "samyang-poll",
+  "name": "samyang",
   // 미디어브레인 Cloudflare 계정. 다른 계정으로 잘못 배포하지 않도록 고정한다.
   "account_id": "b50df4bb0b0ca01535bf20b2dc621489",
   "main": "src/index.js",

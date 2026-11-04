@@ -23,9 +23,30 @@ const COOKIE = 'sy_vid';
 const MAX_ANSWER = 300;
 const MAX_FEEDBACK = 200;
 
+// 첫 요청 때 표가 없으면 만든다(migrations/0001_init.sql과 같은 내용). 배포 명령을 따로 바꾸지 않아도 된다.
+const SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS responses (issue TEXT NOT NULL, voter TEXT NOT NULL, choice TEXT, answer TEXT,
+     created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+     PRIMARY KEY (issue, voter))`,
+  `CREATE TABLE IF NOT EXISTS entries (issue TEXT NOT NULL, voter TEXT NOT NULL, email TEXT NOT NULL,
+     created_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (issue, voter))`,
+  `CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, issue TEXT NOT NULL, voter TEXT NOT NULL,
+     body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')))`,
+  `CREATE INDEX IF NOT EXISTS feedback_issue ON feedback(issue)`,
+];
+let schemaReady = null;
+function ensureSchema(env) {
+  schemaReady ??= env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s))).catch((e) => {
+    schemaReady = null;
+    throw e;
+  });
+  return schemaReady;
+}
+
 export default {
   async fetch(request, env) {
     try {
+      await ensureSchema(env);
       return await route(request, env);
     } catch (err) {
       console.error(err);

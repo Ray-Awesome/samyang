@@ -8,7 +8,7 @@
 
 ## 주소 (배포 후)
 
-기본 주소는 `https://samyang-poll.ray-b50.workers.dev` 입니다.
+기본 주소는 `https://samyang.ray-b50.workers.dev` 입니다.
 
 | 용도 | 주소 |
 |---|---|
