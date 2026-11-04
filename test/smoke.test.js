@@ -112,3 +112,19 @@ test('동료 추천은 이름과 이유가 모두 있어야 받는다', { skip }
   assert.match(await (await post({ nominee: '바이오팜 김○○' })).text(), /함께 적어 주세요/);
   assert.match(await (await post({ nominee: '바이오팜 김○○', reason: '검사실 이야기가 궁금해요' })).text(), /추천을 잘 받았어요/);
 });
+
+async function adminPost(path) {
+  return fetch(BASE + path, { method: 'POST', headers: { Authorization: 'Basic ' + btoa('admin:' + process.env.ADMIN_TOKEN), Origin: BASE } });
+}
+
+test('가상 응답을 넣으면 원고 숫자가 결과에 나오고, 지우면 실제 응답만 남는다', { skip: skipAdmin }, async () => {
+  assert.match(await (await adminPost('/admin/sample/load')).text(), /가상 응답 1547명/);
+  await adminPost('/admin/sample/load'); // 두 번 눌러도 늘지 않는다
+  const r = await (await get('/r/2027-01-06')).text();
+  assert.match(r, /가상 응답 612명 포함/);
+  const admin = await (await adminGet('/admin/2027-01-13')).text();
+  assert.match(admin, /SAMI를 업무에 어디까지 써도 되나요/);
+  assert.match(admin, /임원분들도 새 자리에 가면 첫 주에 헤매시나요/);
+  assert.match(await (await adminPost('/admin/sample/clear')).text(), /지웠습니다/);
+  assert.doesNotMatch(await (await get('/r/2027-01-06')).text(), /가상 응답/);
+});

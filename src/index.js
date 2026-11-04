@@ -19,7 +19,10 @@
 //   GET  /admin/:issue.csv      응답 CSV
 //   POST /admin/:issue/draw     추첨(n명). 응모 메일 주소 반환
 //   POST /admin/:issue/purge    해당 호 응모 메일 주소 삭제(기프티콘 발송 후)
+//   POST /admin/sample/load     제안용 가상 응답 넣기(src/sample.js, 원고 숫자와 일치)
+//   POST /admin/sample/clear    가상 응답만 지우기(voter가 sample:로 시작하는 줄)
 
+import { loadSample, clearSample, SAMPLE_PREFIX } from './sample.js';
 import { POLLS, GIFT_RULE } from './polls.js';
 
 const COOKIE = 'sy_vid';
@@ -327,7 +330,8 @@ function entryFields() {
 
 async function results(env, issue, poll) {
   const total = await env.DB.prepare(`SELECT COUNT(*) AS n FROM responses WHERE issue = ?1`).bind(issue).first();
-  let body = `<p class="q">${esc(poll.question)}</p><p class="hint">${isClosed(poll) ? '마감됨' : '집계 중'} · 응답 ${total.n}명</p>`;
+  const sample = await env.DB.prepare(`SELECT COUNT(*) AS n FROM responses WHERE issue = ?1 AND voter LIKE ?2`).bind(issue, `${SAMPLE_PREFIX}%`).first();
+  let body = `<p class="q">${esc(poll.question)}</p><p class="hint">${isClosed(poll) ? '마감됨' : '집계 중'} · 응답 ${total.n}명${sample.n ? ` (제안용 가상 응답 ${sample.n}명 포함)` : ''}</p>`;
   if (poll.type === 'choice') {
     const { results: rows } = await env.DB.prepare(
       `SELECT choice, COUNT(*) AS n FROM responses WHERE issue = ?1 GROUP BY choice`,
@@ -376,8 +380,18 @@ async function admin(request, env, parts, method) {
       `SELECT issue, COUNT(*) AS n FROM responses GROUP BY issue`,
     ).all();
     const counts = Object.fromEntries(rows.map((r) => [r.issue, r.n]));
+    const sample = await env.DB.prepare(`SELECT COUNT(*) AS n FROM responses WHERE voter LIKE ?1`).bind(`${SAMPLE_PREFIX}%`).first();
     return page('관리 · 호별 응답', '<ul>' + Object.entries(POLLS).map(([id, p]) =>
-      `<li><a href="/admin/${esc(id)}">${esc(p.issueLabel)} · ${esc(p.title)}</a> — ${counts[id] || 0}명</li>`).join('') + '</ul>', 200, true);
+      `<li><a href="/admin/${esc(id)}">${esc(p.issueLabel)} · ${esc(p.title)}</a> — ${counts[id] || 0}명</li>`).join('') + '</ul>' +
+      `<h2>제안용 가상 응답</h2><p>지금 들어 있는 가상 응답 ${sample.n}명. 원고에 적힌 숫자(612명, 17%, 387개 등)가 결과 화면에 그대로 나오게 만든 데이터입니다. 실제 응답은 건드리지 않습니다.</p>
+      <form method="post" action="/admin/sample/load"><button class="btn" type="submit">가상 응답 넣기(다시 누르면 새로 덮어씀)</button></form>
+      <form method="post" action="/admin/sample/clear" onsubmit="return confirm('가상 응답만 모두 지웁니다.')"><button class="btn ghost" type="submit">가상 응답 지우기</button></form>`, 200, true);
+  }
+  if (parts[0] === 'sample' && method === 'POST' && (parts[1] === 'load' || parts[1] === 'clear')) {
+    const msg = parts[1] === 'load'
+      ? ((n) => `가상 응답 ${n.responses}명, 피드백·추천 ${n.feedback}건, 추첨 응모 ${n.entries}건을 넣었습니다.`)(await loadSample(env))
+      : `가상 데이터 ${await clearSample(env)}줄을 지웠습니다.`;
+    return page('가상 응답', `<p>${esc(msg)}</p><p><a href="/admin">돌아가기</a></p>`, 200, true);
   }
 
   let [issue, action] = parts;
