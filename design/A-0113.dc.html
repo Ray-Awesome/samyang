@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>시안 A 펜슬 노트 · 1월 13일 호</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=Noto+Serif+KR:wght@600;900&amp;family=Nanum+Pen+Script&amp;display=swap">
+<style>
+body{margin:0;font-family:'Noto Sans KR',sans-serif;color:#2a2a2a}
+a{color:#151F6D}a:hover{color:#0b113f}
+.lined{background-image:repeating-linear-gradient(#F6F3EC 0 27px,#E3DDD0 27px 28px)}
+.pen{font-family:'Nanum Pen Script',cursive}
+.serif{font-family:'Noto Serif KR',serif}
+</style>
+</helmet>
+<div style="width: 640px; min-height: 3500px; background: #F6F3EC; box-sizing: border-box; display: flex; flex-direction: column">
+
+<div style="padding: 30px 40px 14px; display: flex; justify-content: space-between; align-items: flex-end">
+<div class="serif" style="font-size: 28px; font-weight: 900; color: {{accent}}">우리함께 Weekly</div>
+<div style="font-size: 12px; color: #5f5a50; text-align: right">VOL.○○<br>2027년 1월 13일 수요일</div>
+</div>
+<div style="margin: 0 40px; height: 2px; background: #3b3b3b; opacity: 0.55; transform: rotate(-0.4deg)"></div>
+
+<div style="margin: 20px 40px 0; padding: 18px 22px; background: #FFFDF8; border: 1px solid #DDD5C5; font-size: 15px; line-height: 1.75">
+<div style="font-size: 12px; font-weight: 700; color: {{accent}}; margin-bottom: 4px">오늘의 위클리 요약</div>
+2월 &lt;삼양 사람들&gt;은 삼양바이오팜으로 가요. 여러분이 그곳에 묻고 싶다고 한 질문을 들고 갈게요. 새 자리에서 출발한 세 사람의 첫 주 메모도 펼쳐요.
+</div>
+
+<div style="padding: 26px 40px 6px">
+<div style="font-size: 13px; font-weight: 700; color: {{accent}}; letter-spacing: 1px">이번 주 삼양, 3줄</div>
+<div style="display: flex; flex-direction: column; gap: 14px; margin-top: 12px; font-size: 14px; line-height: 1.65">
+<div><div style="font-weight: 700; font-size: 15px"><span class="pen" style="font-size: 22px; color: {{pencil}}">✓</span> 2월 행선지는 삼양바이오팜이에요</div><b>무슨 일</b> 지난주 &lt;삼양인 한 표&gt;에서 가장 많은 표를 받았어요.<br><b>나에게 달라지는 것</b> 듣고 싶은 바이오팜 동료가 있다면 1월 22일까지 추천해 주세요.<br><b>더 알아보기</b> <a href="#">바이오팜 동료 추천하기</a></div>
+<div><div style="font-weight: 700; font-size: 15px"><span class="pen" style="font-size: 22px; color: {{pencil}}">✓</span> 출장비 신청, 1월 18일부터 종이 없이 해요</div><b>무슨 일</b> 출장비 정산이 새 경비 시스템으로 옮겨 가요.<br><b>나에게 달라지는 것</b> 영수증은 휴대폰으로 찍어 올리면 끝이에요.<br><b>더 알아보기</b> <a href="#">시스템 사용 안내</a></div>
+</div>
+</div>
+
+<div style="padding: 26px 40px 0">
+<div style="font-size: 13px; font-weight: 700; color: {{accent}}; letter-spacing: 1px">삼양인 한 표 · 지난주 결과</div>
+<div class="serif" style="font-size: 22px; font-weight: 900; margin: 8px 0 14px; line-height: 1.4">2월은 바이오팜, 그리고 여러분이 그곳에 묻고 싶은 것</div>
+<img src="images/A-01.jpg" width="560" height="150" alt="열두 칸 동그라미 도식, 1월 칸은 칠해졌고 다른 칸에 순서 번호" style="display: block; width: 100%; height: auto">
+<div style="font-size: 14px; line-height: 1.7; margin: 14px 0">612명이 답했어요. 1위 삼양바이오팜 17% · 2위 판교 연구소 14% · 3위 울산 공장 12%</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{asks}}" as="q" hint-placeholder-count="3">
+<div style="background: #FFF6C9; padding: 14px 16px; transform: rotate({{q.tilt}}); box-shadow: 0 1px 0 #d9cf9a; font-size: 15px; line-height: 1.6">“{{q.text}}”<div class="pen" style="font-size: 20px; color: #4a4a4a; margin-top: 2px">— {{q.who}}</div></div>
+</sc-for>
+</div>
+</div>
+
+<div style="margin: 34px 40px 0; height: 2px; background: #3b3b3b; opacity: 0.4; transform: rotate(0.3deg)"></div>
+
+<div style="padding: 24px 40px 0">
+<div style="font-size: 13px; font-weight: 700; color: {{accent}}">생생 리포트</div>
+<h1 class="serif" style="margin: 8px 0 16px; font-size: 30px; line-height: 1.35; font-weight: 900">새 명함을 받은 첫 주,<br>세 사람의 메모장</h1>
+<img src="images/A-02.jpg" width="560" height="220" alt="소속이 바뀐 프로필 카드 세 장을 겹쳐 그린 연필 스케치" style="display: block; width: 100%; height: auto">
+<p style="font-size: 16px; line-height: 1.8; margin: 18px 0">처음 회사에 온 사람, 11년 만에 처음 팀을 옮긴 사람, 같은 공장에서 처음 다른 라인을 맡은 사람. 세 사람에게 첫 주 휴대폰 메모장에 남긴 한 줄을 요일별로 보여 달라고 했어요.</p>
+</div>
+
+<div style="padding: 0 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{people}}" as="p" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<img src="{{p.img}}" width="178" height="120" alt="{{p.alt}}" style="display: block; width: 100%; height: auto">
+<div style="font-size: 14px; font-weight: 700">{{p.name}}</div>
+<div style="font-size: 11px; color: #6b6558; line-height: 1.4; min-height: 30px">{{p.team}}</div>
+<div class="lined" style="background-color: #F6F3EC; border: 1px solid #DDD5C5; padding: 6px 10px 10px; display: flex; flex-direction: column">
+<sc-for list="{{p.notes}}" as="n" hint-placeholder-count="5">
+<div class="pen" style="font-size: 18px; line-height: 28px; color: #333"><span style="color: {{pencil}}">{{n.d}}</span> {{n.t}}</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="padding: 24px 40px 0; font-size: 16px; line-height: 1.8">
+<p style="margin: 0 0 14px"><b>강태호 기사</b>는 인수인계 노트의 이해 안 되는 줄마다 물음표를 붙여 선배에게 물었어요. 첫 주가 끝날 때 물음표는 스물세 개에서 네 개로 줄었어요.</p>
+<div style="display: flex; gap: 12px; margin-bottom: 18px">
+<div class="pen" style="flex: 1; border: 1.5px dashed #9a9384; padding: 10px; text-align: center; font-size: 26px; color: #4a4a4a">? × 23</div>
+<div class="pen" style="flex: 1; border: 1.5px dashed #9a9384; padding: 10px; text-align: center; font-size: 26px; color: #4a4a4a">? × 11</div>
+<div class="pen" style="flex: 1; border: 1.5px dashed #9a9384; padding: 10px; text-align: center; font-size: 26px; color: {{pencil}}">? × 4</div>
+</div>
+<div class="serif" style="font-size: 20px; font-weight: 900; margin-bottom: 8px">세 사람이 같은 말을 했어요</div>
+<p style="margin: 0">“천천히 해”, “다음엔 하나만 해”, “겨울엔 이 소리가 정상이야”. 올해 우리 팀에 새로 온 동료가 있다면, 이번 주에 한마디 먼저 건네 보면 어떨까요?</p>
+</div>
+
+<div style="margin: 34px 40px 0; padding: 24px; background: #FFFDF8; border: 1.5px solid #3b3b3b; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 13px; font-weight: 700; color: {{accent}}">삼양인 한 표 · 이번 주 질문</div>
+<div class="serif" style="font-size: 21px; font-weight: 900; line-height: 1.4">3월 리더 인터뷰에서 꼭 묻고 싶은 질문은?</div>
+<div style="font-size: 14px; line-height: 1.7">이름 없이 보내도 돼요. 이름을 남기면 질문이 실릴 때 “누가 물었는지”도 함께 실려요.</div>
+<a href="#" style="align-self: flex-start; min-height: 44px; padding: 0 22px; display: flex; align-items: center; background: {{accent}}; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none">질문 보내기</a>
+<div class="pen" style="font-size: 20px; color: #4a4a4a; border-top: 1px solid #3b3b3b; padding-top: 6px; width: 60%">서명란: 이름 · 소속 (선택)</div>
+<div style="font-size: 12px; color: #6b6558">마감 1월 15일(금) 오후 6시 · 기프티콘 5명 추첨</div>
+</div>
+
+<div style="padding: 26px 40px 0">
+<div style="font-size: 13px; font-weight: 700; color: {{accent}}; margin-bottom: 10px">지난 호 피드백</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="background: #FFF6C9; padding: 12px 14px; font-size: 14px; line-height: 1.6; transform: rotate(-1deg)">“‘칩 그리는 물감 원료’ 표현 좋네요.”<div class="pen" style="font-size: 18px">— 서지우 사원, 삼양케이씨아이</div></div>
+<div style="background: #FFF6C9; padding: 12px 14px; font-size: 14px; line-height: 1.6; transform: rotate(1deg)">“저희는 열한 번이었어요.”<div class="pen" style="font-size: 18px">— 문경환 차장, 삼양이노켐</div></div>
+</div>
+<div style="margin-top: 14px"><a href="#" style="font-weight: 700; font-size: 14px">이번 호 한 줄 의견 남기기</a></div>
+</div>
+
+<div style="margin: 26px 40px 0; padding: 14px 0; border-top: 1px solid #3b3b3b">
+<div style="font-size: 12px; font-weight: 700; color: {{accent}}">출석부 · 이번 호에 이름이 실린 동료 11명 · 올해 누적 11명</div>
+<div class="pen" style="font-size: 21px; line-height: 1.5; color: #333; margin-top: 4px">이하은 · 최민석 · 강태호 · 한서진 · 오세린 · 정우람 · 김나래 · 서지우 · 문경환 · 윤지현 · 박도현</div>
+</div>
+
+<div style="margin-top: auto; padding: 22px 40px; background: #2a2a2a; color: #cfc8b8; font-size: 12px; line-height: 1.7">
+삼양 우리함께 Weekly · 발행 삼양홀딩스 커뮤니케이션팀 · 회신 weekly@samyang.com (예시 주소)<br>지난 호 다시 보기 · 수신 거부
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#151F6D"},"pencil":{"editor":"color","default":"#FC4C02","options":["#FC4C02","#151F6D","#00A3AD"]},"$preview":{"width":640,"height":3500}}'>
+class Component extends DCLogic {
+renderVals() {
+const days = ['월','화','수','목','금'];
+const mk = (arr) => arr.map((t, i) => ({ d: days[i], t }));
+return {
+accent: this.props.accent ?? '#151F6D',
+pencil: this.props.pencil ?? '#FC4C02',
+asks: [
+{ text: '주사기에 미리 담긴 약은 공장에서 한 개씩 다 검사하나요?', who: '한서진 기사, 삼양사 울산공장', tilt: '-0.6deg' },
+{ text: '같은 그룹인데 의약 쪽은 무슨 일을 하는지 잘 몰라요. 하루 일과부터 알려 주세요.', who: '오세린 매니저, 삼양홀딩스 재무팀', tilt: '0.5deg' },
+{ text: '바이오팜도 화학 공장처럼 교대 근무가 있나요?', who: '정우람 대리, 삼양패키징 광혜원공장', tilt: '-0.3deg' }
+],
+people: [
+{ name: '이하은 사원', img: 'images/A-03.jpg', alt: '노트를 든 신입 사원 연필 초상', team: '삼양사 식품BU · 신입', notes: mk(['내 이름표. 떨린다','용어 모름. SAMI한테 물어봄','“천천히 해” 다섯 번','동기들도 모름. 안심','연구소 견학!']) },
+{ name: '최민석 과장', img: 'images/A-04.jpg', alt: '이삿짐 상자 옆 과장 연필 초상', team: '홀딩스 재무팀 → 사업기획팀', notes: mk(['11년 만에 짐. 박스 셋','질문은 하나만','다 아는 척 금지','“돈은 언제 들어와요?”','그 질문 먼저 해 달래']) },
+{ name: '강태호 기사', img: 'images/A-05.jpg', alt: '안전모를 쓴 현장 기사 연필 초상', team: '삼양사 울산공장 B라인', notes: mk(['라인 냄새가 다르다','물음표 23개','겨울엔 이 소리 정상','야간 끝. 물음표 11','물음표 4. 겨울 나 보자']) }
+]
+};
+}
+}
+</script>
+</body>
+</html>

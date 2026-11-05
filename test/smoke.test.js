@@ -135,3 +135,14 @@ test('브라우저가 Origin을 null로 보내도 같은 사이트 요청이면 
   const cross = await fetch(BASE + '/admin/sample/clear', { method: 'POST', headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' } });
   assert.equal(cross.status, 403);
 });
+
+test('세 호 메일 화면이 열리고, 버튼이 실제 설문 주소로 이어진다', { skip }, async () => {
+  const list = await (await get('/mail/')).text();
+  assert.match(list, /2027-01-06/);
+  const m6 = await (await get('/mail/2027-01-06')).text();
+  assert.match(m6, /href="\/v\/2027-01-06\/biopharm"/);
+  assert.doesNotMatch(m6, /\{\{|sc-for/);
+  assert.match(await (await get('/mail/2027-01-13')).text(), /href="\/q\/2027-01-13"/);
+  assert.match(await (await get('/mail/2027-01-20')).text(), /href="\/v\/2027-01-20\/cafeteria"/);
+  assert.equal((await get('/mail/images/B-02.jpg')).status, 200);
+});
