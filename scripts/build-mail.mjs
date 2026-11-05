@@ -5,8 +5,8 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync } from 'node:fs'
 import { POLLS } from '../src/polls.js';
 
 const ISSUES = [
-  { id: '2027-01-06', file: 'Main.dc.html', design: '시안 B 현장 다큐', title: '머리카락보다 수천 배 가는 회로, 그 밑그림을 그리는 사람들' },
   { id: '2027-01-13', file: 'A-0113.dc.html', design: '시안 A 펜슬 노트', title: '새 명함을 받은 첫 주, 세 사람의 메모장' },
+  { id: '2027-01-06', file: 'Main.dc.html', design: '시안 B 현장 다큐', title: '머리카락보다 수천 배 가는 회로, 그 밑그림을 그리는 사람들' },
   { id: '2027-01-20', file: 'C-0120.dc.html', design: '시안 C 타이포 카드', title: '올해 내 휴가와 연말정산, 무엇이 달라지나요?' },
 ];
 
@@ -110,9 +110,9 @@ a.card:hover{box-shadow:0 2px 12px rgba(20,26,43,.12)}
 <body>
 <main>
 <h1>우리함께 Weekly</h1>
-<p>2027년 1월 샘플 세 호예요. 호마다 다른 디자인 시안을 적용했어요. 메일 속 설문·의견·추천 버튼은 실제로 눌러 볼 수 있어요. 인물과 수치는 제안용 예시예요.</p>
+<p>디자인 시안 A·B·C를 2027년 1월 샘플 세 호에 하나씩 적용했어요. 메일 속 설문·의견·추천 버튼은 실제로 눌러 볼 수 있어요. 인물과 수치는 제안용 예시예요.</p>
 <ol>
-${ISSUES.map((x, i) => `<li><a class="card" style="--c:${['#FC4C02', '#151F6D', '#FFC72C'][i]}" href="/mail/${x.id}"><div class="d">${kdate(x.id)} 호 · ${esc(x.design)}</div><div class="t">${esc(x.title)}</div></a></li>`).join('\n')}
+${ISSUES.map((x, i) => `<li><a class="card" style="--c:${['#151F6D', '#FC4C02', '#FFC72C'][i]}" href="/mail/${x.id}"><div class="d">${esc(x.design)} · ${kdate(x.id)} 호</div><div class="t">${esc(x.title)}</div></a></li>`).join('\n')}
 </ol>
 <div class="links">설문 결과 미리 보기: ${ISSUES.map((x) => `<a href="/r/${x.id}">${kdate(x.id)}</a>`).join(' · ')}</div>
 </main>
