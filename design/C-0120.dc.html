@@ -104,7 +104,7 @@ a{color:#151F6D}a:hover{color:#0b113f}
 <div style="font-size: 12px; font-weight: 900; color: {{accent}}">이번 호에 이름이 실린 동료 6명 · 올해 누적 13명</div>
 <div style="display: flex; flex-wrap: wrap; gap: 6px">
 <sc-for list="{{named}}" as="n" hint-placeholder-count="6">
-<span style="font-size: 12px; font-weight: 700; padding: 4px 10px; background: #EEF1F5; color: {{accent}}">{{n}}</span>
+<span style="font-size: 13px; padding: 5px 10px; background: #EEF1F5; color: #151a2b"><b style="color: {{accent}}">{{n.name}}</b> · {{n.team}}</span>
 </sc-for>
 </div>
 </div>
@@ -131,7 +131,7 @@ asks: [
 { text: '스페셜티로 간다는데, 기존 사업에서 일하는 사람은 무엇을 준비해야 하나요?', who: '강태호 기사 · 삼양사 울산공장', bg: accent, fg: '#ffffff' },
 { text: '임원분들도 새 자리에 가면 첫 주에 헤매시나요?', who: '이하은 사원 · 삼양사 식품BU', bg: '#FFC72C', fg: '#151a2b' }
 ],
-named: ['정우람', '오세린', '강태호', '이하은', '배승훈', '류다인']
+named: [{ name: '정우람 대리', team: '삼양패키징 광혜원공장' }, { name: '오세린 매니저', team: '삼양홀딩스 재무팀' }, { name: '강태호 기사', team: '삼양사 울산공장' }, { name: '이하은 사원', team: '삼양사 식품BU' }, { name: '배승훈 반장', team: '삼양사 울산공장' }, { name: '류다인 대리', team: '삼양바이오팜' }]
 };
 }
 }
