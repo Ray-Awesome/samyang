@@ -372,7 +372,9 @@ async function admin(request, env, parts, method) {
     });
   }
   // 브라우저가 Basic 인증을 자동으로 붙이므로, 다른 사이트에서 보낸 POST는 막는다.
-  if (method === 'POST' && request.headers.get('Origin') !== new URL(request.url).origin) {
+  // Referrer-Policy가 엄격하면 브라우저가 Origin을 'null'로 보내므로 Sec-Fetch-Site도 함께 본다.
+  const sameSite = request.headers.get('Origin') === new URL(request.url).origin || request.headers.get('Sec-Fetch-Site') === 'same-origin';
+  if (method === 'POST' && !sameSite) {
     return page('요청을 처리할 수 없습니다', '<p>관리 화면에서 다시 시도해 주세요.</p>', 403, true);
   }
   if (parts.length === 0 && method === 'GET') {
@@ -542,7 +544,7 @@ table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--li
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer',
+      'Referrer-Policy': 'same-origin',
       'X-Frame-Options': 'DENY',
       'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     },

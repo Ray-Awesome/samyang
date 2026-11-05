@@ -128,3 +128,10 @@ test('가상 응답을 넣으면 원고 숫자가 결과에 나오고, 지우면
   assert.match(await (await adminPost('/admin/sample/clear')).text(), /지웠습니다/);
   assert.doesNotMatch(await (await get('/r/2027-01-06')).text(), /가상 응답/);
 });
+
+test('브라우저가 Origin을 null로 보내도 같은 사이트 요청이면 관리 POST를 받는다', { skip: skipAdmin }, async () => {
+  const headers = { Authorization: 'Basic ' + btoa('admin:' + process.env.ADMIN_TOKEN), Origin: 'null', 'Sec-Fetch-Site': 'same-origin' };
+  assert.match(await (await fetch(BASE + '/admin/sample/clear', { method: 'POST', headers })).text(), /지웠습니다/);
+  const cross = await fetch(BASE + '/admin/sample/clear', { method: 'POST', headers: { ...headers, 'Sec-Fetch-Site': 'cross-site' } });
+  assert.equal(cross.status, 403);
+});
